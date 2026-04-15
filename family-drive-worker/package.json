@@ -13,7 +13,7 @@
     "cf:type-gen": "wrangler types",
     "secret:email": "wrangler secret put GOOGLE_SERVICE_ACCOUNT_EMAIL",
     "secret:key": "wrangler secret put GOOGLE_PRIVATE_KEY",
-    "secret:origin": "wrangler secret put ALLOWED_ORIGIN"
+    "secret:origins": "wrangler secret put ALLOWED_ORIGINS"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250409.0",

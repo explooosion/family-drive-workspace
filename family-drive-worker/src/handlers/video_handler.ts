@@ -1,4 +1,5 @@
 import { buildCorsHeaders } from "../utils/cors_utils";
+import { verifyFirebaseIdToken } from "../services/firebase_auth";
 import { getAccessToken, invalidateTokenCache } from "../services/token_service";
 import type { Env } from "../worker_types";
 
@@ -23,8 +24,9 @@ export async function handleVideoRequest(
   env: Env,
   ctx: ExecutionContext,
 ): Promise<Response> {
+  void ctx;
   const url = new URL(request.url);
-  const cors = buildCorsHeaders(env.ALLOWED_ORIGIN, request.headers.get("Origin"));
+  const cors = buildCorsHeaders(env.ALLOWED_ORIGINS, request.headers.get("Origin"));
 
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: cors });
@@ -37,21 +39,21 @@ export async function handleVideoRequest(
   }
 
   const fileId = match[1];
-  const rangeHeader = request.headers.get("Range");
-  const cacheUrl = `https://drive-cache.worker/file/${fileId}`;
-  const cacheRequest = new Request(cacheUrl);
-  const cache = caches.default;
+  const bearerToken = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim();
+  const queryToken = url.searchParams.get("token")?.trim();
+  const firebaseIdToken = bearerToken || queryToken;
 
-  if (!rangeHeader) {
-    const cached = await cache.match(cacheRequest);
-
-    if (cached) {
-      const cacheHit = new Response(cached.body, cached);
-      Object.entries(cors).forEach(([key, value]) => cacheHit.headers.set(key, value));
-
-      return cacheHit;
-    }
+  if (!firebaseIdToken) {
+    return new Response("Unauthorized", { status: 401, headers: cors });
   }
+
+  try {
+    await verifyFirebaseIdToken(firebaseIdToken, env.FIREBASE_PROJECT_ID);
+  } catch {
+    return new Response("Unauthorized", { status: 401, headers: cors });
+  }
+
+  const rangeHeader = request.headers.get("Range");
 
   let accessToken: string;
 
@@ -102,16 +104,10 @@ export async function handleVideoRequest(
 
   const responseHeaders = new Headers(cors);
   copyPassThroughHeaders(driveResponse.headers, responseHeaders);
-  responseHeaders.set("Cache-Control", "public, max-age=3600");
+  responseHeaders.set("Cache-Control", "private, no-store, max-age=0");
 
-  const response = new Response(driveResponse.body, {
+  return new Response(driveResponse.body, {
     status: driveResponse.status,
     headers: responseHeaders,
   });
-
-  if (driveResponse.status === 200 && !rangeHeader) {
-    ctx.waitUntil(cache.put(cacheRequest, response.clone()));
-  }
-
-  return response;
 }

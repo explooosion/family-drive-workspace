@@ -5,10 +5,12 @@ compatibility_date = "2025-04-01"
 # Optional custom domain for production deployment.
 # Replace with your own hostname before deploy.
 [[routes]]
-pattern = "family-drive-worker.yourdomain.com"
+pattern = "family-drive-worker.robby570.tw"
 custom_domain = true
 
-# Secrets (set via `npm run secret:email / secret:key / secret:origin`):
+# Secrets (set via `npm run secret:email / secret:key / secret:origins`):
 #   GOOGLE_SERVICE_ACCOUNT_EMAIL  — Service Account email
 #   GOOGLE_PRIVATE_KEY            — PEM private key (literal \n for newlines)
-#   ALLOWED_ORIGIN                — React app origin, e.g. https://yourdomain.com
+#   ALLOWED_ORIGINS               — Comma-separated React app origins, e.g. https://yourdomain.com
+# Non-secret vars:
+#   FIREBASE_PROJECT_ID           — Firebase project id used to verify ID tokens
