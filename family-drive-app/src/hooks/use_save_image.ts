@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 
-import { DRIVE_API_BASE } from "../config/drive";
+import { getWorkerVideoUrl } from "../services/google_drive";
 import type { DriveFile } from "../types";
+import { useAuthStore } from "../stores/auth_store";
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -42,19 +43,18 @@ function resolveFileName(file: DriveFile, blobType: string): string {
  * sheet where the user can choose "Save Image" to save to the photo library.
  * On desktop the browser initiates a file download.
  */
-export function useSaveImage(accessToken: string) {
+export function useSaveImage() {
   const [saving, setSaving] = useState(false);
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const saveImage = useCallback(
     async (file: DriveFile) => {
-      if (!accessToken || saving) {
+      if (saving) {
         return;
       }
       setSaving(true);
       try {
-        const res = await fetch(`${DRIVE_API_BASE}/files/${file.id}?alt=media`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        const res = await fetch(getWorkerVideoUrl(file.id, accessToken ?? undefined));
         if (!res.ok) {
           return;
         }

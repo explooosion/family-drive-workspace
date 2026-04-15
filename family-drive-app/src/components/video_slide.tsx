@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { getWorkerVideoUrl } from "../utils/drive_api/url_helpers";
+import { useAuthStore } from "../stores/auth_store";
 import { VideoPlayer } from "./video_player";
 
 type VideoSlideProps = {
@@ -13,7 +14,8 @@ type VideoSlideProps = {
 
 export function VideoSlide({ fileId, poster, name, isActive, showOverlay }: VideoSlideProps) {
   const [playing, setPlaying] = useState(false);
-  const src = getWorkerVideoUrl(fileId);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const src = getWorkerVideoUrl(fileId, accessToken ?? undefined);
 
   if (playing) {
     return <VideoPlayer src={src} poster={poster} name={name} isActive={isActive} />;

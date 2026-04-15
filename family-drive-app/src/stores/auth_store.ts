@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { User } from "firebase/auth";
-import { onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "firebase/auth";
+import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db, googleProvider } from "../services/firebase";
@@ -43,8 +43,6 @@ export const useAuthStore = create<AuthState>((setState, getState) => ({
           accessToken: null,
           tokenExpiry: null,
         });
-        localStorage.removeItem("google_access_token");
-        localStorage.removeItem("google_access_token_expiry");
         return;
       }
 
@@ -74,8 +72,6 @@ export const useAuthStore = create<AuthState>((setState, getState) => ({
           // UID 不在 Firestore users collection → 未授權，立即登出
           clearTimeout(timeoutId);
           await signOut(auth);
-          localStorage.removeItem("google_access_token");
-          localStorage.removeItem("google_access_token_expiry");
           setState({
             firebaseReady: true,
             authenticating: false,
@@ -118,26 +114,17 @@ export const useAuthStore = create<AuthState>((setState, getState) => ({
 
         // 清除逾時計時器
         clearTimeout(timeoutId);
-
-        // 在所有 async 操作完成後，再次讀取 localStorage 中的 token
-        // 這樣可以確保在登入流程中設置的 token 不會被覆蓋
-        const savedToken = localStorage.getItem("google_access_token");
-        const savedTokenExpiry = localStorage.getItem("google_access_token_expiry");
-
-        // 檢查 token 是否過期
-        const isTokenExpired = savedTokenExpiry && Date.now() > Number.parseInt(savedTokenExpiry);
+        const idToken = await user.getIdToken();
+        const tokenPayload = JSON.parse(atob(idToken.split(".")[1])) as { exp?: number };
+        const tokenExpiry = tokenPayload.exp ? tokenPayload.exp * 1000 : null;
 
         setState({
           firebaseReady: true,
           authenticating: false,
           user,
           userInfo,
-          accessToken: isTokenExpired ? null : savedToken,
-          tokenExpiry: isTokenExpired
-            ? -1
-            : savedTokenExpiry
-              ? Number.parseInt(savedTokenExpiry)
-              : null,
+          accessToken: idToken,
+          tokenExpiry,
           error: null,
         });
       } catch (err) {
@@ -171,23 +158,14 @@ export const useAuthStore = create<AuthState>((setState, getState) => ({
         return;
       }
 
-      // 從 Firebase 登入結果取得 Google OAuth credential
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        // Google OAuth token 通常有效期為 1 小時
-        const expiryTime = Date.now() + 3600 * 1000;
+      const idToken = await result.user.getIdToken();
+      const tokenPayload = JSON.parse(atob(idToken.split(".")[1])) as { exp?: number };
+      const tokenExpiry = tokenPayload.exp ? tokenPayload.exp * 1000 : null;
 
-        // 儲存 access token 和過期時間到 localStorage
-        localStorage.setItem("google_access_token", credential.accessToken);
-        localStorage.setItem("google_access_token_expiry", expiryTime.toString());
-
-        setState({
-          accessToken: credential.accessToken,
-          tokenExpiry: expiryTime,
-        });
-      } else {
-        throw new Error("無法取得 Google Drive 存取權限");
-      }
+      setState({
+        accessToken: idToken,
+        tokenExpiry,
+      });
 
       setState({ loading: false });
     } catch (err) {
@@ -208,24 +186,15 @@ export const useAuthStore = create<AuthState>((setState, getState) => ({
 
     setState({ loading: true, error: null });
     try {
-      // 使用重新登入取得新的 token
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const idToken = await user.getIdToken(true);
+      const tokenPayload = JSON.parse(atob(idToken.split(".")[1])) as { exp?: number };
+      const tokenExpiry = tokenPayload.exp ? tokenPayload.exp * 1000 : null;
 
-      if (credential?.accessToken) {
-        const expiryTime = Date.now() + 3600 * 1000;
-
-        localStorage.setItem("google_access_token", credential.accessToken);
-        localStorage.setItem("google_access_token_expiry", expiryTime.toString());
-
-        setState({
-          accessToken: credential.accessToken,
-          tokenExpiry: expiryTime,
-          loading: false,
-        });
-      } else {
-        throw new Error("無法刷新 Google Drive 存取權限");
-      }
+      setState({
+        accessToken: idToken,
+        tokenExpiry,
+        loading: false,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "權限刷新失敗";
       setState({ error: message, loading: false });
@@ -235,16 +204,12 @@ export const useAuthStore = create<AuthState>((setState, getState) => ({
 
   // 由 Google Drive API 回側 401 時呼叫，清除 token 並標記為已過期
   expireToken() {
-    localStorage.removeItem("google_access_token");
-    localStorage.removeItem("google_access_token_expiry");
     // tokenExpiry = -1 讓 use_token_monitor 偵測為已過期，顯示重新授權按鈕
     setState({ accessToken: null, tokenExpiry: -1 });
   },
 
   async logout() {
     await signOut(auth);
-    localStorage.removeItem("google_access_token");
-    localStorage.removeItem("google_access_token_expiry");
     setState({
       user: null,
       userInfo: null,

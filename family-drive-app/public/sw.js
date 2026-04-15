@@ -1,9 +1,9 @@
 // Service Worker for PWA
 const CACHE_NAME = 'family-album-v2';
 const urlsToCache = [
-  '/family-drive/',
-  '/family-drive/index.html',
-  '/family-drive/manifest.json',
+  '/family-drive-workspace/',
+  '/family-drive-workspace/index.html',
+  '/family-drive-workspace/manifest.json',
 ];
 
 // Install event - cache essential files
@@ -41,7 +41,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() =>
-        caches.match('/family-drive/index.html')
+        caches.match('/family-drive-workspace/index.html')
       )
     );
     return;

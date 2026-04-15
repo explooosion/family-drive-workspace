@@ -36,7 +36,7 @@ export function AlbumContent({
   const softDelete = useDriveStore((s) => s.softDelete);
   const renameItem = useDriveStore((s) => s.renameItem);
   const accessToken = useAuthStore((s) => s.accessToken);
-  const { saveImage } = useSaveImage(accessToken ?? "");
+  const { saveImage } = useSaveImage();
 
   const [menuFile, setMenuFile] = useState<DriveFile | null>(null);
   const [pendingDeleteFile, setPendingDeleteFile] = useState<DriveFile | null>(null);

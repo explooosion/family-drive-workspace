@@ -4,7 +4,7 @@ import { useAuthStore } from "../../../stores/auth_store";
 import { useDriveStore } from "../../../stores/drive_store";
 import { useSettingsStore } from "../../../stores/settings_store";
 import { isFolderMime, isImageMime, isVideoMime } from "../../../services/google_drive";
-import { DRIVE_API_BASE } from "../../../config/drive";
+import { useSaveImage } from "../../../hooks/use_save_image";
 import type { DriveFile } from "../../../types";
 
 interface Toast {
@@ -24,6 +24,7 @@ export function useFileOperations() {
   const forceRefreshCurrentFolder = useDriveStore((s) => s.forceRefreshCurrentFolder);
   const softDelete = useDriveStore((s) => s.softDelete);
   const settings = useSettingsStore((s) => s.settings);
+  const { saveImage } = useSaveImage();
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -105,21 +106,7 @@ export function useFileOperations() {
         continue;
       }
       try {
-        const res = await fetch(`${DRIVE_API_BASE}/files/${id}?alt=media`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (!res.ok) {
-          continue;
-        }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = file.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        await saveImage(file);
         // 瀏覽器需要短暫間隔才能處理多個下載
         await new Promise<void>((resolve) => setTimeout(resolve, 400));
       } catch {

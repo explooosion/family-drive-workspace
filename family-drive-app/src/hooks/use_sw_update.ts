@@ -12,7 +12,7 @@ export function useSwUpdate(): { updateReady: boolean; applyUpdate: () => void }
     let reg: ServiceWorkerRegistration;
 
     navigator.serviceWorker
-      .register("/family-drive/sw.js")
+      .register("/family-drive-workspace/sw.js")
       .then((r) => {
         reg = r;
         setRegistration(r);

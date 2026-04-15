@@ -2,7 +2,7 @@
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/family-drive-workspace/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     
     <!-- PWA Meta Tags -->
@@ -11,13 +11,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Gallery" />
-    <link rel="manifest" href="/family-drive-workspace/manifest.json" />
-    <link rel="apple-touch-icon" href="/family-drive-workspace/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     
     <title>Family Drive Gallery</title>
   </head>
   <body>
-    <!-- GitHub Pages SPA 路由還原：將 404.html 編碼的 query 路徑還原至 history -->
+    <!-- GitHub Pages SPA route restore: decode 404.html query path back to browser history. -->
     <script>
       (function (l) {
         if (l.search[1] === '/') {
@@ -39,28 +39,42 @@
     <!-- Register Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('%BASE_URL%sw.js').then(
-            (registration) => {
-              console.log('SW registered:', registration);
-              
-              // Check for updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New version available
-                    if (confirm('有新版本可用，是否更新？')) {
-                      newWorker.postMessage({ type: 'SKIP_WAITING' });
-                      window.location.reload();
+        const isLocalDevHost =
+          window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+        if (isLocalDevHost) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker
+              .getRegistrations()
+              .then((registrations) => {
+                registrations.forEach((registration) => registration.unregister());
+              })
+              .catch((err) => console.error('SW cleanup failed:', err));
+          });
+        } else {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('%BASE_URL%sw.js').then(
+              (registration) => {
+                console.log('SW registered:', registration);
+
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                  const newWorker = registration.installing;
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New version available
+                      if (confirm('有新版本可用，是否更新？')) {
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        window.location.reload();
+                      }
                     }
-                  }
+                  });
                 });
-              });
-            },
-            (err) => console.error('SW registration failed:', err)
-          );
-        });
+              },
+              (err) => console.error('SW registration failed:', err)
+            );
+          });
+        }
       }
     </script>
   </body>

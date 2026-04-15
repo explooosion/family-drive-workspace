@@ -1,7 +1,5 @@
 import type { DriveFile } from "../../types";
-import { DRIVE_UPLOAD_BASE } from "../../config/drive";
-
-import { authHeaders } from "./api_helpers";
+import { callDriveApi } from "../../services/functions_api";
 
 export async function initiateResumableUpload(
   accessToken: string,
@@ -9,27 +7,11 @@ export async function initiateResumableUpload(
   mimeType: string,
   parentId: string,
 ) {
-  const metadata = {
-    name: fileName,
-    parents: [parentId],
-  };
-  const res = await fetch(`${DRIVE_UPLOAD_BASE}/files?uploadType=resumable`, {
-    method: "POST",
-    headers: {
-      ...authHeaders(accessToken),
-      "Content-Type": "application/json; charset=UTF-8",
-      "X-Upload-Content-Type": mimeType,
-    },
-    body: JSON.stringify(metadata),
+  void accessToken;
+  const result = await callDriveApi<{ uploadUrl: string }>("/drive/upload/initiate", {
+    body: { fileName, mimeType, parentId },
   });
-  if (!res.ok) {
-    throw new Error(`Drive API resumable init error: ${res.status}`);
-  }
-  const uploadUrl = res.headers.get("Location");
-  if (!uploadUrl) {
-    throw new Error("No upload URL returned");
-  }
-  return uploadUrl;
+  return result.uploadUrl;
 }
 
 export async function uploadChunk(

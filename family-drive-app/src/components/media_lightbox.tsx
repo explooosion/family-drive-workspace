@@ -99,7 +99,7 @@ function IconOverlayButton({
 
 export function MediaLightbox({ files, initialIndex, onClose }: Props) {
   const token = useAuthStore((s) => s.accessToken) ?? "";
-  const { saving, saveImage } = useSaveImage(token);
+  const { saving, saveImage } = useSaveImage();
   const currentIndexRef = useRef(initialIndex);
   const zoomRef = useRef<{
     zoom: number;
