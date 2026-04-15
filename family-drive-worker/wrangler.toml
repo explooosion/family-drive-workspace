@@ -1,6 +1,22 @@
 name = "family-drive-worker"
 main = "src/index.ts"
 compatibility_date = "2025-04-01"
+logpush = true
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1
 
 # Optional custom domain for production deployment.
 # Replace with your own hostname before deploy.
