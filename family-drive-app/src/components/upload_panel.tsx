@@ -15,6 +15,7 @@ type UploadTask = {
   id: number;
   file: File;
   status: "pending" | "uploading" | "success" | "error";
+  uploadedBytes?: number;
   error?: string;
   previewUrl?: string;
 };
@@ -28,6 +29,10 @@ function Spinner({ className }: { className?: string }) {
       aria-hidden="true"
     />
   );
+}
+
+function formatMb(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
 export function UploadPanel({ onClose, onSuccess }: Props) {
@@ -131,7 +136,11 @@ export function UploadPanel({ onClose, onSuccess }: Props) {
         continue;
       }
 
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: "uploading" } : t)));
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === task.id ? { ...t, status: "uploading", uploadedBytes: 0 } : t,
+        ),
+      );
 
       if (autoScrollUploadItem) {
         requestAnimationFrame(() => {
@@ -143,14 +152,30 @@ export function UploadPanel({ onClose, onSuccess }: Props) {
       }
 
       try {
-        await uploadFile(accessToken, task.file, currentFolderId);
-        setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: "success" } : t)));
+        await uploadFile(accessToken, task.file, currentFolderId, (uploadedBytes, totalBytes) => {
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === task.id
+                ? { ...t, status: "uploading", uploadedBytes: Math.min(uploadedBytes, totalBytes) }
+                : t,
+            ),
+          );
+        });
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === task.id ? { ...t, status: "success", uploadedBytes: task.file.size } : t,
+          ),
+        );
         successCount++;
       } catch (err) {
         setTasks((prev) =>
           prev.map((t) =>
             t.id === task.id
-              ? { ...t, status: "error", error: err instanceof Error ? err.message : "未知錯誤" }
+              ? {
+                  ...t,
+                  status: "error",
+                  error: err instanceof Error ? err.message : "未知錯誤",
+                }
               : t,
           ),
         );
@@ -309,7 +334,9 @@ export function UploadPanel({ onClose, onSuccess }: Props) {
                     {task.file.name}
                   </p>
                   <p className="text-base text-gray-500 dark:text-gray-400">
-                    {(task.file.size / 1024 / 1024).toFixed(2)} MB
+                    {task.status === "uploading"
+                      ? `${formatMb(task.uploadedBytes ?? 0)} / ${formatMb(task.file.size)}`
+                      : formatMb(task.file.size)}
                     {task.status === "pending" && (
                       <span className="ml-2 text-gray-400">等待中</span>
                     )}

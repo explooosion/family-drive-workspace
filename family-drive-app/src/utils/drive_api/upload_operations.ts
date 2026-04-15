@@ -42,7 +42,7 @@ export async function uploadFile(
   accessToken: string,
   file: File,
   parentId: string,
-  onProgress?: (progress: number) => void,
+  onProgress?: (uploadedBytes: number, totalBytes: number) => void,
 ) {
   const uploadUrl = await initiateResumableUpload(accessToken, file.name, file.type, parentId);
 
@@ -55,7 +55,7 @@ export async function uploadFile(
     startByte += chunk.size;
 
     if (onProgress) {
-      onProgress(Math.min((startByte / file.size) * 100, 100));
+      onProgress(Math.min(startByte, file.size), file.size);
     }
 
     if (result) {
