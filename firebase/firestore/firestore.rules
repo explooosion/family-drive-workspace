@@ -20,11 +20,19 @@ service cloud.firestore {
     }
 
     // User profile data:
-    // - Owner can read/create/update own doc
+    // - Owner can read own doc
+    // - Owner can only update safe profile fields (cannot elevate role)
     // - Admin can read/create/update/delete any user doc
     match /users/{userId} {
-      allow read, create, update: if isUser() && request.auth.uid == userId;
-      allow read, create, update, delete: if isAdmin();
+      allow read: if (isUser() && request.auth.uid == userId) || isAdmin();
+
+      allow update: if isUser() && request.auth.uid == userId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin();
     }
 
     // Albums:
