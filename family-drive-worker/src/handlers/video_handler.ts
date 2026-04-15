@@ -8,6 +8,21 @@ type DriveFileMetadata = {
   thumbnailLink?: string;
 };
 
+const DEFAULT_VIDEO_THUMBNAIL_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Default video thumbnail">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#g)"/>
+  <circle cx="320" cy="180" r="54" fill="#ffffff" fill-opacity="0.16"/>
+  <polygon points="305,150 305,210 355,180" fill="#ffffff"/>
+  <text x="320" y="300" text-anchor="middle" font-size="18" font-family="Arial, sans-serif" fill="#d1d5db">Preview unavailable</text>
+</svg>
+`.trim();
+
 function getTraceId(request: Request): string {
   const cfRay = request.headers.get("cf-ray");
 
@@ -22,6 +37,23 @@ function withTraceHeaders(baseHeaders: HeadersInit, traceId: string): Headers {
   const headers = new Headers(baseHeaders);
   headers.set("X-Worker-Trace-Id", traceId);
   return headers;
+}
+
+function buildDefaultThumbnailResponse(
+  cors: Record<string, string>,
+  traceId: string,
+): Response {
+  return new Response(DEFAULT_VIDEO_THUMBNAIL_SVG, {
+    status: 200,
+    headers: withTraceHeaders(
+      {
+        ...cors,
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "private, no-store, max-age=0",
+      },
+      traceId,
+    ),
+  });
 }
 
 function readFirebaseToken(request: Request, url: URL): string | null {
@@ -275,10 +307,11 @@ export async function handleThumbnailRequest(
   const metadata = (await metadataResponse.json()) as DriveFileMetadata;
 
   if (!metadata.thumbnailLink) {
-    return new Response("Thumbnail unavailable", {
-      status: 404,
-      headers: withTraceHeaders(cors, traceId),
+    console.info("[worker][thumbnail] thumbnailLink missing, using default thumbnail", {
+      traceId,
+      fileId,
     });
+    return buildDefaultThumbnailResponse(cors, traceId);
   }
 
   const thumbnailResponse = await fetch(metadata.thumbnailLink, {
@@ -292,10 +325,7 @@ export async function handleThumbnailRequest(
       traceId,
       status: thumbnailResponse.status,
     });
-    return new Response("Thumbnail unavailable", {
-      status: thumbnailResponse.status === 404 ? 404 : 502,
-      headers: withTraceHeaders(cors, traceId),
-    });
+    return buildDefaultThumbnailResponse(cors, traceId);
   }
 
   const responseHeaders = withTraceHeaders(cors, traceId);
