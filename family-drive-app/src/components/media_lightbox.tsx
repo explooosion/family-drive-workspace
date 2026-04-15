@@ -8,12 +8,9 @@ import { MdClose, MdFileDownload, MdZoomIn, MdZoomOut } from "react-icons/md";
 
 import type { DriveFile } from "../types";
 import { useAuthStore } from "../stores/auth_store";
-import { isVideoMime, getThumbnailUrl } from "../services/google_drive";
-import { useHdImage } from "../hooks/use_hd_image";
+import { isVideoMime, getWorkerThumbnailUrl } from "../services/google_drive";
 import { useSaveImage } from "../hooks/use_save_image";
 import { VideoSlide } from "./video_slide";
-
-const HD_DELAY_LIGHTBOX = 500;
 
 type DriveVideoSlide = {
   type: "drive-video";
@@ -54,14 +51,10 @@ function formatDate(iso?: string): string {
 }
 
 function ImageSlide({ src, alt }: { src: string; alt: string }) {
-  const { displaySrc, containerRef } = useHdImage(src, !!src, HD_DELAY_LIGHTBOX);
   return (
-    <div
-      ref={containerRef}
-      className="flex h-screen w-screen items-center justify-center overflow-hidden bg-black"
-    >
+    <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-black">
       <img
-        src={displaySrc}
+        src={src}
         alt={alt}
         draggable={false}
         className="h-full w-full object-contain select-none"
@@ -125,18 +118,21 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
   const slides = useMemo<Array<DriveVideoSlide | DriveImageSlide>>(
     () =>
       files.map((file) => {
+        const HD_SIZE = 2000;
         if (isVideoMime(file.mimeType)) {
           return {
             type: "drive-video",
             driveFileId: file.id,
-            drivePoster: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? undefined,
+            drivePoster: token
+              ? getWorkerThumbnailUrl(file.id, token, HD_SIZE)
+              : file.thumbnailLink ?? undefined,
             driveName: file.name,
             src: "",
           };
         }
         return {
           type: "drive-image",
-          src: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? "",
+          src: token ? getWorkerThumbnailUrl(file.id, token, HD_SIZE) : file.thumbnailLink ?? "",
           alt: file.name,
         };
       }),

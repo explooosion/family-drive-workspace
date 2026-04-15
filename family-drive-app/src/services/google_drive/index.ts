@@ -12,6 +12,7 @@ export {
   uploadChunk,
   uploadFile,
   getThumbnailUrl,
+  getWorkerThumbnailUrl,
   getFileContentUrl,
   getWorkerVideoUrl,
   isImageMime,
