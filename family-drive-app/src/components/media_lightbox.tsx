@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
@@ -122,22 +122,26 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
     disabled: true,
   });
 
-  const slides: Array<DriveVideoSlide | DriveImageSlide> = files.map((file) => {
-    if (isVideoMime(file.mimeType)) {
-      return {
-        type: "drive-video",
-        driveFileId: file.id,
-        drivePoster: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? undefined,
-        driveName: file.name,
-        src: "",
-      };
-    }
-    return {
-      type: "drive-image",
-      src: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? "",
-      alt: file.name,
-    };
-  });
+  const slides = useMemo<Array<DriveVideoSlide | DriveImageSlide>>(
+    () =>
+      files.map((file) => {
+        if (isVideoMime(file.mimeType)) {
+          return {
+            type: "drive-video",
+            driveFileId: file.id,
+            drivePoster: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? undefined,
+            driveName: file.name,
+            src: "",
+          };
+        }
+        return {
+          type: "drive-image",
+          src: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? "",
+          alt: file.name,
+        };
+      }),
+    [files, token],
+  );
 
   function syncZoomState() {
     const instance = zoomRef.current;

@@ -49,7 +49,7 @@ function buildDefaultThumbnailResponse(
       {
         ...cors,
         "Content-Type": "image/svg+xml; charset=utf-8",
-        "Cache-Control": "private, no-store, max-age=0",
+        "Cache-Control": "private, max-age=3600",
       },
       traceId,
     ),
@@ -358,7 +358,7 @@ export async function handleThumbnailRequest(
 
   const responseHeaders = withTraceHeaders(cors, traceId);
   copyPassThroughHeaders(thumbnailResponse.headers, responseHeaders);
-  responseHeaders.set("Cache-Control", "private, no-store, max-age=0");
+  responseHeaders.set("Cache-Control", "private, max-age=3600");
 
   return new Response(thumbnailResponse.body, {
     status: thumbnailResponse.status,
