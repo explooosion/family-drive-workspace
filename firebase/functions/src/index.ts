@@ -3,7 +3,12 @@ import { onRequest, Request } from "firebase-functions/v2/https";
 
 import { loadConfig } from "./config";
 import { requireAllowedUser, requireRole } from "./auth";
-import { createDriveClient, ensureInSharedScope, initiateResumableUpload } from "./drive";
+import {
+  createDriveClient,
+  ensureInSharedScope,
+  initiateResumableUpload,
+  uploadResumableChunk,
+} from "./drive";
 
 function resolveCorsOrigin(requestOrigin: string | undefined, allowedOrigins: string[]): string {
   if (allowedOrigins.length === 0) {
@@ -210,6 +215,32 @@ export const driveApi = onRequest(async (request: Request, response: Response) =
       const uploadUrl = await initiateResumableUpload(config, fileName, mimeType, parentId);
       response.json({ uploadUrl });
       return;
+    }
+
+    if (request.method === "POST" && request.path.endsWith("/drive/upload/chunk")) {
+      const { uploadUrl, chunkBase64, startByte, totalBytes } = request.body as {
+        uploadUrl: string;
+        chunkBase64: string;
+        startByte: number;
+        totalBytes: number;
+      };
+
+      const chunkBytes = Buffer.from(chunkBase64, "base64");
+      const upstream = await uploadResumableChunk(uploadUrl, chunkBytes, startByte, totalBytes);
+
+      if (upstream.status === 200 || upstream.status === 201) {
+        const file = (await upstream.json()) as unknown;
+        response.json({ done: true, file });
+        return;
+      }
+
+      if (upstream.status === 308) {
+        response.json({ done: false });
+        return;
+      }
+
+      const upstreamText = await upstream.text();
+      throw new Error(`upload_chunk_failed_${upstream.status}:${upstreamText.slice(0, 200)}`);
     }
 
     if (request.method === "POST" && request.path.endsWith("/drive/folder/ensure-root")) {

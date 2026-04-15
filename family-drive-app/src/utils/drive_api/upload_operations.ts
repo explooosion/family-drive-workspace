@@ -1,6 +1,15 @@
 import type { DriveFile } from "../../types";
 import { callDriveApi } from "../../services/functions_api";
 
+type UploadChunkResponse =
+  | {
+      done: false;
+    }
+  | {
+      done: true;
+      file: DriveFile;
+    };
+
 export async function initiateResumableUpload(
   accessToken: string,
   fileName: string,
@@ -20,22 +29,46 @@ export async function uploadChunk(
   startByte: number,
   totalBytes: number,
 ) {
-  const endByte = startByte + chunk.size - 1;
-  const res = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Range": `bytes ${startByte}-${endByte}/${totalBytes}`,
+  const chunkBase64 = await blobToBase64(chunk);
+
+  const res = await callDriveApi<UploadChunkResponse>("/drive/upload/chunk", {
+    body: {
+      uploadUrl,
+      chunkBase64,
+      startByte,
+      totalBytes,
     },
-    body: chunk,
   });
 
-  if (res.status === 200 || res.status === 201) {
-    return res.json() as Promise<DriveFile>;
-  }
-  if (res.status === 308) {
+  if (!res.done) {
     return null;
   }
-  throw new Error(`Upload chunk failed: ${res.status}`);
+
+  return res.file;
+}
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      reject(new Error("blob_to_base64_failed"));
+    };
+
+    reader.onload = () => {
+      const result = reader.result;
+
+      if (typeof result !== "string") {
+        reject(new Error("blob_to_base64_failed"));
+        return;
+      }
+
+      const commaIndex = result.indexOf(",");
+      resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
+    };
+
+    reader.readAsDataURL(blob);
+  });
 }
 
 export async function uploadFile(

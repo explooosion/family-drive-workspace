@@ -56,6 +56,23 @@ export async function initiateResumableUpload(
   return uploadUrl;
 }
 
+export async function uploadResumableChunk(
+  uploadUrl: string,
+  chunkBytes: Uint8Array,
+  startByte: number,
+  totalBytes: number,
+): Promise<Response> {
+  const endByte = startByte + chunkBytes.byteLength - 1;
+
+  return fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Range": `bytes ${startByte}-${endByte}/${totalBytes}`,
+    },
+    body: chunkBytes,
+  });
+}
+
 export async function ensureInSharedScope(
   drive: drive_v3.Drive,
   fileId: string,
