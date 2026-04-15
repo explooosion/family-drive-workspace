@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 const HD_DELAY_MS = 3000;
 const HD_SIZE_RE = /=s\d+/;
 const HD_SIZE_SUFFIX = "=s2000";
+const HD_QUERY_SIZE = "2000";
 
 type UseHdImageReturn = {
   displaySrc: string;
@@ -22,15 +23,31 @@ export function useHdImage(
   delayMs = HD_DELAY_MS,
 ): UseHdImageReturn {
   const [displaySrc, setDisplaySrc] = useState(thumbnailSrc);
-  const [prevSrc, setPrevSrc] = useState(thumbnailSrc);
   const [element, setElement] = useState<HTMLDivElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hdLoadedRef = useRef(false);
 
-  // thumbnailSrc 換新時重置（React 官方 derived state 模式：在 render 中有條件地 setState）
-  if (prevSrc !== thumbnailSrc) {
-    setPrevSrc(thumbnailSrc);
+  useEffect(() => {
     setDisplaySrc(thumbnailSrc);
+  }, [thumbnailSrc]);
+
+  function resolveHdUrl(src: string): string {
+    if (HD_SIZE_RE.test(src)) {
+      return src.replace(HD_SIZE_RE, HD_SIZE_SUFFIX);
+    }
+
+    try {
+      const url = new URL(src);
+
+      if (url.searchParams.has("size")) {
+        url.searchParams.set("size", HD_QUERY_SIZE);
+        return url.toString();
+      }
+    } catch {
+      return src;
+    }
+
+    return src;
   }
 
   useEffect(
@@ -47,9 +64,7 @@ export function useHdImage(
             if (entry.isIntersecting) {
               if (!timerRef.current && !hdLoadedRef.current) {
                 timerRef.current = setTimeout(() => {
-                  const hdUrl = HD_SIZE_RE.test(thumbnailSrc)
-                    ? thumbnailSrc.replace(HD_SIZE_RE, HD_SIZE_SUFFIX)
-                    : thumbnailSrc;
+                  const hdUrl = resolveHdUrl(thumbnailSrc);
                   const img = new globalThis.Image();
                   img.onload = () => {
                     setDisplaySrc(hdUrl);

@@ -18,6 +18,7 @@ export function getWorkerVideoUrl(fileId: string, idToken?: string): string {
 export function getWorkerThumbnailUrl(fileId: string, idToken?: string): string {
   const base = (import.meta.env.VITE_CLOUDFLARE_WORKER_URL as string).replace(/\/+$/, "");
   const url = new URL(`${base}/thumbnail/${fileId}`);
+  url.searchParams.set("size", "220");
 
   if (idToken) {
     url.searchParams.set("token", idToken);

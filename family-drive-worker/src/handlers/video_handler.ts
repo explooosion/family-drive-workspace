@@ -121,6 +121,32 @@ async function fetchDriveMetadata(fileId: string, accessToken: string): Promise<
   );
 }
 
+function resolveRequestedThumbnailSize(url: URL): number {
+  const requested = Number.parseInt(url.searchParams.get("size") ?? "220", 10);
+
+  if (!Number.isFinite(requested)) {
+    return 220;
+  }
+
+  if (requested < 64) {
+    return 64;
+  }
+
+  if (requested > 2000) {
+    return 2000;
+  }
+
+  return requested;
+}
+
+function buildDriveThumbnailUrl(thumbnailLink: string, size: number): string {
+  if (/=s\d+/.test(thumbnailLink)) {
+    return thumbnailLink.replace(/=s\d+/, `=s${size}`);
+  }
+
+  return thumbnailLink;
+}
+
 function copyPassThroughHeaders(source: Headers, target: Headers): void {
   const passThroughHeaders = ["Content-Type", "Content-Length", "Content-Range", "Accept-Ranges"];
 
@@ -279,6 +305,7 @@ export async function handleThumbnailRequest(
   }
 
   const accessToken = tokenResult.token;
+  const thumbnailSize = resolveRequestedThumbnailSize(url);
   const metadataResponse = await fetchDriveMetadata(fileId, accessToken);
 
   if (metadataResponse.status === 401 || metadataResponse.status === 403) {
@@ -314,7 +341,8 @@ export async function handleThumbnailRequest(
     return buildDefaultThumbnailResponse(cors, traceId);
   }
 
-  const thumbnailResponse = await fetch(metadata.thumbnailLink, {
+  const driveThumbnailUrl = buildDriveThumbnailUrl(metadata.thumbnailLink, thumbnailSize);
+  const thumbnailResponse = await fetch(driveThumbnailUrl, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

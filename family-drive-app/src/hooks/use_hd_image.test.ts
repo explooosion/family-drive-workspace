@@ -136,4 +136,27 @@ describe("useHdImage", () => {
     // 沒有 =s<n> pattern，hdUrl fallback 為原始 URL
     expect(result.current.displaySrc).toBe("https://example.com/photo.jpg");
   });
+
+  it("thumbnailSrc 使用 size query 時，會切換到 HD size", async () => {
+    const el = document.createElement("div");
+    const { result } = renderHook(() =>
+      useHdImage("https://example.com/thumbnail/file123?size=220&token=abc", true),
+    );
+
+    await act(async () => {
+      result.current.containerRef(el);
+    });
+
+    await act(async () => {
+      observerCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(result.current.displaySrc).toBe(
+      "https://example.com/thumbnail/file123?size=2000&token=abc",
+    );
+  });
 });
