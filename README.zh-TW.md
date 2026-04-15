@@ -2,6 +2,56 @@
 
 這是一個可開源分享的私有媒體相簿，媒體保留在 Google Drive，存取控制由 Firebase 與 Cloudflare 共同完成。
 
+## AI 協作規範（重要）
+
+在此 repo 請 Copilot/AI 產生或重構程式碼前，請先遵守以下架構邊界。
+
+### 1. Firebase Functions（API 與授權閘道）
+
+- 負責 metadata、資料夾/檔案 CRUD 與安全決策。
+- 每個請求都必須驗證 Firebase ID token。
+- 必須從 Firestore 驗證使用者角色（`admin` / `member`）。
+- 必須強制資料夾隔離（使用者只能存取被指派的 Drive 資料夾範圍）。
+- Google Service Account 憑證僅能留在後端。
+
+### 2. Cloudflare Worker（媒體代理與串流引擎）
+
+- 負責重媒體傳輸（特別是影片串流）。
+- 必須正確支援 HTTP Range（讓影片可 seek/scrub）。
+- 回傳媒體前必須驗證 Firebase ID token。
+- 必須在伺服端附加 Drive access token。
+- 不可把 Drive 直接下載 URL 暴露給瀏覽器。
+
+### 3. Frontend（React + Vite）
+
+- 僅為 UI 層。
+- metadata 操作（list/upload/delete/rename）走 Firebase Functions。
+- 圖片/影片渲染走 Cloudflare Worker URL。
+- 不可處理 Service Account 機密或直接 Drive API 憑證。
+
+### 任務請求模板
+
+需要 AI 寫程式時可使用以下模板：
+
+```md
+# Context: Family Drive Workspace Architecture
+
+Please act as a senior full-stack developer assisting me with the "Family Drive Workspace" monorepo.
+Before generating or refactoring any code, you must follow our separation of concerns:
+
+1) Firebase Functions = metadata CRUD + auth + authorization
+2) Cloudflare Worker = media proxy/streaming + range support
+3) Frontend = UI only, consume Functions/Worker APIs
+
+## Task
+[請描述具體開發任務]
+
+## Constraints
+- 不可把安全邏輯移到前端。
+- 不可暴露 Drive 憑證或直連 URL 給 client。
+- 必須保留既有角色檢查與資料夾範圍限制。
+```
+
 ## 系統架構
 
 ### GCP / Google

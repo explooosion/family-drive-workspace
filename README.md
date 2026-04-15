@@ -2,6 +2,56 @@
 
 Open-source private media gallery that keeps your files in Google Drive while serving access through Firebase and Cloudflare.
 
+## AI Collaboration Contract (Important)
+
+When asking Copilot/AI to generate or refactor code in this repository, follow this architecture boundary first.
+
+### 1. Firebase Functions (API + Auth Gateway)
+
+- Handles metadata, folder/file CRUD, and security decisions.
+- Must validate Firebase ID token for every request.
+- Must verify user role (`admin` / `member`) from Firestore.
+- Must enforce folder isolation (users can only access assigned Drive folder scope).
+- Keeps Google Service Account credentials server-side only.
+
+### 2. Cloudflare Worker (Media Proxy + Streaming Engine)
+
+- Handles heavy media delivery (especially video streaming).
+- Must support proper HTTP Range behavior for seeking/scrubbing.
+- Must verify Firebase ID token before serving media.
+- Must attach Drive access token on server side only.
+- Must not expose direct Drive download URLs to browser clients.
+
+### 3. Frontend (React + Vite)
+
+- UI layer only.
+- Uses Firebase Functions for metadata operations (list/upload/delete/rename).
+- Uses Cloudflare Worker URLs for image/video rendering.
+- Never handles Service Account secrets or direct Drive API credentials.
+
+### Task Request Template
+
+Use this template when asking AI for implementation work:
+
+```md
+# Context: Family Drive Workspace Architecture
+
+Please act as a senior full-stack developer assisting me with the "Family Drive Workspace" monorepo.
+Before generating or refactoring any code, you must follow our separation of concerns:
+
+1) Firebase Functions = metadata CRUD + auth + authorization
+2) Cloudflare Worker = media proxy/streaming + range support
+3) Frontend = UI only, consume Functions/Worker APIs
+
+## Task
+[Describe the specific coding task here]
+
+## Constraints
+- Do not move security logic to frontend.
+- Do not expose Drive credentials/URLs to clients.
+- Preserve existing role checks and folder-scope restrictions.
+```
+
 ## Architecture
 
 ### GCP / Google
