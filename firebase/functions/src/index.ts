@@ -3,7 +3,7 @@ import { onRequest, Request } from "firebase-functions/v2/https";
 
 import { loadConfig } from "./config";
 import { requireAllowedUser, requireRole } from "./auth";
-import { createDriveClient, ensureInSharedScope } from "./drive";
+import { createDriveClient, ensureInSharedScope, initiateResumableUpload } from "./drive";
 
 function resolveCorsOrigin(requestOrigin: string | undefined, allowedOrigins: string[]): string {
   if (allowedOrigins.length === 0) {
@@ -207,23 +207,7 @@ export const driveApi = onRequest(async (request: Request, response: Response) =
         parentId: string;
       };
       await ensureInSharedScope(drive, parentId, config.sharedFolderId);
-
-      const init = await drive.files.create({
-        requestBody: {
-          name: fileName,
-          parents: [parentId],
-        },
-        media: { mimeType },
-        fields: "id",
-        uploadType: "resumable",
-        supportsAllDrives: true,
-      });
-
-      const uploadUrl = init.headers.location;
-      if (!uploadUrl) {
-        throw new Error("missing_upload_url");
-      }
-
+      const uploadUrl = await initiateResumableUpload(config, fileName, mimeType, parentId);
       response.json({ uploadUrl });
       return;
     }
