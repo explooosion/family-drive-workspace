@@ -5,7 +5,7 @@ import type { DriveFile } from "../../types";
  * 支援 HTTP Range Request，讓瀏覽器原生 seek 且無需下載整檔
  */
 export function getWorkerVideoUrl(fileId: string, idToken?: string): string {
-  const base = import.meta.env.VITE_CLOUDFLARE_WORKER_URL as string;
+  const base = (import.meta.env.VITE_CLOUDFLARE_WORKER_URL as string).replace(/\/+$/, "");
   const url = new URL(`${base}/file/${fileId}`);
 
   if (idToken) {

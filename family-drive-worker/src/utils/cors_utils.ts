@@ -1,8 +1,8 @@
 export function buildCorsHeaders(
-  allowedOrigin: string,
+  allowedOrigin: string | undefined,
   requestOrigin: string | null,
 ): Record<string, string> {
-  const allowedOrigins = allowedOrigin.split(",").map((origin) => origin.trim());
+  const allowedOrigins = (allowedOrigin ?? "").split(",").map((origin) => origin.trim());
   const isWildcard = allowedOrigins.includes("*");
 
   const matchedOrigin = isWildcard
