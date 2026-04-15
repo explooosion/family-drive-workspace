@@ -82,7 +82,7 @@ function ListRow({
   const isFolder = isFolderMime(file.mimeType);
   const isImage = isImageMime(file.mimeType);
   const isVideo = file.mimeType.startsWith("video/");
-  const hasThumbnail = !!accessToken && (isImage || (isVideo && !!file.thumbnailLink));
+  const hasThumbnail = !!accessToken && (isImage || isVideo);
   const thumbnailSrc = hasThumbnail ? getThumbnailUrl(file, accessToken!) : "";
 
   return (
@@ -114,7 +114,13 @@ function ListRow({
             alt={file.name}
             loading="lazy"
             onLoad={() => setImageLoaded(true)}
-            onError={() => setImageError(true)}
+            onError={() => {
+              console.warn("[GalleryList] thumbnail load failed", {
+                fileId: file.id,
+                mimeType: file.mimeType,
+              });
+              setImageError(true);
+            }}
             className={`h-full w-full object-cover transition-opacity duration-200 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
           />
         </div>

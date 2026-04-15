@@ -79,7 +79,7 @@ function GridTile({
   const isFolder = isFolderMime(file.mimeType);
   const isImage = isImageMime(file.mimeType);
   const isVideo = file.mimeType.startsWith("video/");
-  const hasThumbnail = !!accessToken && (isImage || (isVideo && !!file.thumbnailLink));
+  const hasThumbnail = !!accessToken && (isImage || isVideo);
 
   const thumbnailSrc = accessToken ? getThumbnailUrl(file, accessToken) : "";
   const { displaySrc, containerRef: hdContainerRef } = useHdImage(thumbnailSrc, hasThumbnail);
@@ -113,7 +113,13 @@ function GridTile({
             className={`h-full w-full object-cover transition-all duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
             loading="lazy"
             onLoad={() => setImageLoaded(true)}
-            onError={() => setImageError(true)}
+            onError={() => {
+              console.warn("[GalleryGrid] thumbnail load failed", {
+                fileId: file.id,
+                mimeType: file.mimeType,
+              });
+              setImageError(true);
+            }}
           />
           {isVideo && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30">

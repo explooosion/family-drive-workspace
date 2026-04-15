@@ -15,17 +15,24 @@ export function getWorkerVideoUrl(fileId: string, idToken?: string): string {
   return url.toString();
 }
 
+export function getWorkerThumbnailUrl(fileId: string, idToken?: string): string {
+  const base = (import.meta.env.VITE_CLOUDFLARE_WORKER_URL as string).replace(/\/+$/, "");
+  const url = new URL(`${base}/thumbnail/${fileId}`);
+
+  if (idToken) {
+    url.searchParams.set("token", idToken);
+  }
+
+  return url.toString();
+}
+
 /**
  * 取得縮圖 URL (用於列表顯示)
  * 優先使用 Google 提供的 thumbnailLink，避免 CORS 問題
  * 參考: https://developers.google.com/drive/api/guides/manage-downloads
  */
 export function getThumbnailUrl(file: DriveFile, accessToken: string): string {
-  if (file.thumbnailLink) {
-    return file.thumbnailLink;
-  }
-
-  return getWorkerVideoUrl(file.id, accessToken);
+  return getWorkerThumbnailUrl(file.id, accessToken);
 }
 
 /**

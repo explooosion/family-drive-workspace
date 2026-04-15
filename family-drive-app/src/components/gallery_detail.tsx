@@ -103,6 +103,7 @@ function DetailRow({
 }) {
   const accessToken = useAuthStore((s) => s.accessToken);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const isFolder = isFolderMime(file.mimeType);
   const isImage = isImageMime(file.mimeType);
   const isVideo = file.mimeType.startsWith("video/");
@@ -131,7 +132,7 @@ function DetailRow({
       <td className="px-3 py-3">
         {isFolder ? (
           <MdFolder className="text-primary-500 text-xl" />
-        ) : hasThumbnail ? (
+        ) : hasThumbnail && !imageError ? (
           <div className="relative h-8 w-8 overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700">
             {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gray-300 dark:bg-gray-600" />
@@ -141,7 +142,13 @@ function DetailRow({
               alt={file.name}
               loading="lazy"
               onLoad={() => setImageLoaded(true)}
-              onError={() => setImageLoaded(true)}
+              onError={() => {
+                console.warn("[GalleryDetail] thumbnail load failed", {
+                  fileId: file.id,
+                  mimeType: file.mimeType,
+                });
+                setImageError(true);
+              }}
               className={`h-full w-full object-cover transition-opacity duration-200 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
             />
           </div>

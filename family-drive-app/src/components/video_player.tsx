@@ -142,6 +142,9 @@ export function VideoPlayer({ src, poster, name, isActive }: Props) {
   }
 
   function handleVideoError() {
+    console.error("[VideoPlayer] video playback failed", {
+      name,
+    });
     setVideoError(true);
     setPlaying(false);
   }

@@ -98,7 +98,7 @@ function IconOverlayButton({
 }
 
 export function MediaLightbox({ files, initialIndex, onClose }: Props) {
-  const token = useAuthStore((s) => s.accessToken) ?? "";
+  const token = useAuthStore((s) => s.accessToken);
   const { saving, saveImage } = useSaveImage();
   const currentIndexRef = useRef(initialIndex);
   const zoomRef = useRef<{
@@ -127,14 +127,14 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
       return {
         type: "drive-video",
         driveFileId: file.id,
-        drivePoster: file.thumbnailLink ?? undefined,
+        drivePoster: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? undefined,
         driveName: file.name,
         src: "",
       };
     }
     return {
       type: "drive-image",
-      src: getThumbnailUrl(file, token),
+      src: token ? getThumbnailUrl(file, token) : file.thumbnailLink ?? "",
       alt: file.name,
     };
   });
