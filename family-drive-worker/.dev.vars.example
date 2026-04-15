@@ -1,0 +1,7 @@
+# Copy this file to .dev.vars (gitignored) and fill in real values
+# Used by `wrangler dev` for local development
+
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----
+# Multiple origins: comma-separated
+ALLOWED_ORIGIN=http://localhost:5173,http://192.168.x.x:5173

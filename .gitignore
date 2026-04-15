@@ -1,0 +1,68 @@
+# ──────────────────────────────────────────────
+# Lockfile — generated per-platform, not committed
+# ──────────────────────────────────────────────
+package-lock.json
+
+# ──────────────────────────────────────────────
+# Secrets & Environment — NEVER commit
+# ──────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.dev.vars
+*-service-account*.json
+*-firebase-adminsdk*.json
+
+# ──────────────────────────────────────────────
+# Build outputs
+# ──────────────────────────────────────────────
+dist
+dist-ssr
+
+# ──────────────────────────────────────────────
+# Dependencies
+# ──────────────────────────────────────────────
+node_modules
+
+# ──────────────────────────────────────────────
+# Cloudflare / Wrangler
+# ──────────────────────────────────────────────
+.wrangler/
+worker-configuration.d.ts
+
+# ──────────────────────────────────────────────
+# NX cache
+# ──────────────────────────────────────────────
+.nx/cache
+.nx/workspace-data
+
+# ──────────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────────
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ──────────────────────────────────────────────
+# Editor & OS
+# ──────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.local
+
+# ──────────────────────────────────────────────
+# Claude / AI agent local state
+# ──────────────────────────────────────────────
+.claude/worktrees
+.claude/settings.local.json

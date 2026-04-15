@@ -1,0 +1,24 @@
+{
+  "name": "family-drive-worker",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "wrangler dev",
+    "dev:lan": "wrangler dev --ip 0.0.0.0 --port 8787",
+    "deploy": "npm run build && wrangler deploy",
+    "format": "prettier --write \"src/**/*.{ts,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
+    "tail": "wrangler tail",
+    "cf:type-gen": "wrangler types",
+    "secret:email": "wrangler secret put GOOGLE_SERVICE_ACCOUNT_EMAIL",
+    "secret:key": "wrangler secret put GOOGLE_PRIVATE_KEY",
+    "secret:origin": "wrangler secret put ALLOWED_ORIGIN"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250409.0",
+    "prettier": "^3.8.2",
+    "typescript": "~6.0.2",
+    "wrangler": "^4.14.4"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "skills": {
+    "base-spec": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "f40075ec35b3e12fd5ad0bf2aa2bc43393585f7ee1156db1b44c1ef6f0605784"
+    },
+    "brand-guidelines": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "102efc5aafec250aeb835ab93324d80588010350d9a458e58e428116d5ed3d16"
+    },
+    "code-lines-limit": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "346b1f4722a3f77be8875a397cc76894b19efa57d1b01c89958fee5bf22dd989"
+    },
+    "code-style": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "8fe5a3a5c95892f7ffd4781aec0f0e1a8200a2729d4edb59b27ab2727130e356"
+    },
+    "commit-message": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "65dab123a5d5ce95de5943ed700b4fba0cb6fd8e24cc70534f4e6a065c1411d6"
+    },
+    "debug-evidence-first": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "9b499843b23f91afbdf0dfcaf7ab51b9dcb8901008bbd5a53aef5e2f9159eb70"
+    },
+    "file-naming-convention": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "b9ec399c3ea74d0757f841b56a8977d71585d654721adfdc8048e15cb392f38c"
+    },
+    "git-state-integrity": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "fbe7f65e55f966a8a81955f69ead98d62d9166c96b5a8061bdf4b55c39ddee99"
+    },
+    "lint-after-edit": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "b28dd483c716059f9d877fddd4edd8f1cac3b72d48e0d1e04284b1618973cf06"
+    },
+    "vercel-react-best-practices": {
+      "source": "explooosion/robby570-agent-skills",
+      "sourceType": "github",
+      "computedHash": "1be892a3ea68b74654326ef836a58dd528d99ae0ab8d879764e2519c39068e67"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>清除 Google 授權</title>
+</head>
+<body>
+    <h1>清除 Google 授權</h1>
+    <ol>
+        <li>前往 <a href="https://myaccount.google.com/permissions" target="_blank">Google 帳戶權限頁面</a></li>
+        <li>找到「family-drive」或您的 Firebase 專案名稱</li>
+        <li>點擊「移除存取權」</li>
+        <li>回到您的應用程式重新登入</li>
+    </ol>
+    <script>
+        console.log('或在開發者工具執行：');
+        console.log('localStorage.clear()');
+        localStorage.clear();
+        alert('已清除本地儲存！請前往 Google 帳戶移除應用程式授權，然後重新登入。');
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: any authenticated Firebase user
+    function isUser() {
+      return request.auth != null;
+    }
+
+    // Helper: user role is admin in /users/{uid}
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Default deny for all unmatched paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profile data:
+    // - Owner can read/create/update own doc
+    // - Admin can read/create/update/delete any user doc
+    match /users/{userId} {
+      allow read, create, update: if isUser() && request.auth.uid == userId;
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // Albums:
+    // - Authenticated users can read/create/update
+    // - Only admin can delete
+    match /albums/{albumId} {
+      allow read, create, update: if isUser();
+      allow delete: if isAdmin();
+
+      match /{document=**} {
+        allow read, create, update: if isUser();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Folders:
+    // - Authenticated users can read/create/update
+    // - Only admin can delete
+    match /folders/{folderId} {
+      allow read, create, update: if isUser();
+      allow delete: if isAdmin();
+
+      match /{document=**} {
+        allow read, create, update: if isUser();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // File metadata:
+    // - Authenticated users can read/create/update
+    // - Only admin can delete
+    match /files/{fileId} {
+      allow read, create, update: if isUser();
+      allow delete: if isAdmin();
+    }
+
+    // App config:
+    // - Authenticated users can read
+    // - Only admin can write/delete
+    match /config/{document=**} {
+      allow read: if isUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // System logs:
+    // - Admin only for all operations
+    match /logs/{logId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+  }
+}

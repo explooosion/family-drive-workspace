@@ -1,0 +1,19 @@
+/**
+ * Button Components
+ */
+
+.btn-primary {
+  @apply bg-primary-500 hover:bg-primary-600 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-base font-semibold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-md bg-gray-200 px-4 py-2 text-base font-semibold text-gray-700 transition-all hover:bg-gray-300 active:scale-95 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+}
+
+.btn-icon {
+  @apply flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition-all hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700;
+}
+
+.btn-danger {
+  @apply bg-danger-500 hover:bg-danger-600 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-base font-semibold text-white transition-all active:scale-95;
+}

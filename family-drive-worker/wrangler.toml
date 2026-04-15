@@ -1,0 +1,14 @@
+name = "family-drive-worker"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+# Optional custom domain for production deployment.
+# Replace with your own hostname before deploy.
+[[routes]]
+pattern = "family-drive-worker.yourdomain.com"
+custom_domain = true
+
+# Secrets (set via `npm run secret:email / secret:key / secret:origin`):
+#   GOOGLE_SERVICE_ACCOUNT_EMAIL  — Service Account email
+#   GOOGLE_PRIVATE_KEY            — PEM private key (literal \n for newlines)
+#   ALLOWED_ORIGIN                — React app origin, e.g. https://yourdomain.com

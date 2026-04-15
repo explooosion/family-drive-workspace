@@ -1,0 +1,7 @@
+/**
+ * Card Components
+ */
+
+.card {
+  @apply rounded-lg bg-white shadow-sm dark:bg-gray-800;
+}

@@ -1,0 +1,3 @@
+cd family-drive-app && npx lint-staged
+cd /Users/robby/Desktop/repo/family-drive && npx nx build family-drive-app
+npx nx test family-drive-app

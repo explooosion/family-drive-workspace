@@ -1,0 +1,31 @@
+/**
+ * Facebook Design System - Typography
+ * Font families, sizes, and weights following Facebook's design
+ */
+
+@theme {
+  /* Font Families */
+  --font-family-sans: "Segoe UI Historic", "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-family-emoji: "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Font Sizes - Facebook scale */
+  --font-size-xs: 0.6875rem; /* 11px */
+  --font-size-sm: 0.8125rem; /* 13px */
+  --font-size-base: 0.9375rem; /* 15px - Facebook's base */
+  --font-size-lg: 1.0625rem; /* 17px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.3333; /* Facebook default */
+  --line-height-relaxed: 1.5;
+}

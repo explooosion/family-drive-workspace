@@ -1,0 +1,21 @@
+{
+  "name": "family-drive-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "family-drive-app",
+    "family-drive-worker"
+  ],
+  "scripts": {
+    "dev": "nx dev family-drive-app",
+    "build": "nx build family-drive-app",
+    "test": "nx test family-drive-app",
+    "lint": "nx lint family-drive-app",
+    "dev:worker": "nx dev family-drive-worker",
+    "dev:worker:lan": "nx dev:lan family-drive-worker",
+    "deploy:worker": "nx deploy family-drive-worker"
+  },
+  "devDependencies": {
+    "nx": "^21.0.0"
+  }
+}

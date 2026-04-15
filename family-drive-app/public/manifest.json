@@ -1,0 +1,26 @@
+{
+  "name": "Family Drive Gallery",
+  "short_name": "Gallery",
+  "description": "A private media gallery connected to your cloud drive.",
+  "start_url": "/family-drive/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "categories": ["photos", "lifestyle"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/family-drive/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/family-drive/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
