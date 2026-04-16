@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-import { getWorkerVideoUrl } from "../services/google_drive";
+import { getWorkerVideoUrl, isVideoMime } from "../services/google_drive";
 import type { DriveFile } from "../types";
 import { useAuthStore } from "../stores/auth_store";
 
@@ -54,7 +54,22 @@ export function useSaveImage() {
       }
       setSaving(true);
       try {
-        const res = await fetch(getWorkerVideoUrl(file.id, accessToken ?? undefined));
+        const workerUrl = getWorkerVideoUrl(file.id, accessToken ?? undefined);
+
+        // Desktop video: use direct anchor download to avoid buffering entire file in memory
+        if (isVideoMime(file.mimeType) && !isMobileOrPwa()) {
+          const fileName = resolveFileName(file, file.mimeType);
+          const a = document.createElement("a");
+          a.href = workerUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          return;
+        }
+
+        // Mobile / PWA (image or video): fetch blob for Web Share API
+        const res = await fetch(workerUrl);
         if (!res.ok) {
           return;
         }
@@ -74,7 +89,7 @@ export function useSaveImage() {
           return;
         }
 
-        // Fallback: browser anchor download (desktop / legacy)
+        // Fallback: browser anchor download (desktop image / legacy)
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
