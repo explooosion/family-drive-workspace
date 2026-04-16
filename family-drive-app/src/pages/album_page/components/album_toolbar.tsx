@@ -15,6 +15,7 @@ import { BottomSheetMenu } from "../../../components/bottom_sheet_menu";
 
 interface AlbumToolbarProps {
   isRoot: boolean;
+  canEnterSelection: boolean;
   selectionMode: boolean;
   selectedCount: number;
   selectedSizeMb: string;
@@ -32,6 +33,7 @@ interface AlbumToolbarProps {
 
 export function AlbumToolbar({
   isRoot,
+  canEnterSelection,
   selectionMode,
   selectedCount,
   selectedSizeMb,
@@ -134,7 +136,7 @@ export function AlbumToolbar({
           <MdRefresh />
         </button>
       </div>
-      {!isRoot && (
+      {canEnterSelection && (
         <button
           type="button"
           onClick={onEnterSelection}

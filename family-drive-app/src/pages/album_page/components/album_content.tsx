@@ -3,7 +3,7 @@ import { MdFolder } from "react-icons/md";
 
 import { useDriveStore } from "../../../stores/drive_store";
 import { useAuthStore } from "../../../stores/auth_store";
-import { isVideoMime } from "../../../services/google_drive";
+import { isFolderMime, isVideoMime } from "../../../services/google_drive";
 import { GalleryList } from "../../../components/gallery_view";
 import { GalleryGrid } from "../../../components/gallery_grid";
 import { GalleryDetail } from "../../../components/gallery_detail";
@@ -146,6 +146,7 @@ export function AlbumContent({
       {pendingDeleteFile && (
         <ConfirmDeleteDialog
           filename={pendingDeleteFile.name}
+          itemLabel={isFolderMime(pendingDeleteFile.mimeType) ? "相簿" : "檔案"}
           onConfirm={handleConfirmDelete}
           onClose={() => setPendingDeleteFile(null)}
         />

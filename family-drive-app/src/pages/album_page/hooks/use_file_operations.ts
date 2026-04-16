@@ -14,6 +14,7 @@ interface Toast {
 
 export function useFileOperations() {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const userInfo = useAuthStore((s) => s.userInfo);
   const files = useDriveStore((s) => s.files);
   const selectionMode = useDriveStore((s) => s.selectionMode);
   const selectedIds = useDriveStore((s) => s.selectedIds);
@@ -31,6 +32,7 @@ export function useFileOperations() {
   const [toast, setToast] = useState<Toast | null>(null);
 
   const isRoot = folderStack.length <= 1;
+  const isAdmin = userInfo?.role === "admin";
   const mediaFiles = files.filter((f) => isImageMime(f.mimeType) || isVideoMime(f.mimeType));
 
   function handleFileClick(file: DriveFile) {
@@ -60,7 +62,7 @@ export function useFileOperations() {
       return;
     }
 
-    if (isRoot) {
+    if (isRoot && !isAdmin) {
       setToast({ message: "活動相簿不能刪除", type: "warning" });
       return;
     }

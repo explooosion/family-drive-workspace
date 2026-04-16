@@ -92,8 +92,8 @@ export function AlbumPage() {
   const isRoot = folderStack.length <= 1;
   const isAdmin = userInfo?.role === "admin";
   const canUpload = !isRoot && settings.allowUpload;
-  // Admins can delete anywhere (except root album list); members only inside sub-folders
-  const canDelete = settings.allowDelete && !isRoot && (folderStack.length > 2 || isAdmin);
+  const canDelete = settings.allowDelete && (isAdmin || (!isRoot && folderStack.length > 2));
+  const canEnterSelection = isAdmin || !isRoot;
   const shouldUseListMode = isRoot;
 
   // Handler functions
@@ -203,6 +203,7 @@ export function AlbumPage() {
       <div className="sticky top-14 z-30">
         <AlbumToolbar
           isRoot={isRoot}
+          canEnterSelection={canEnterSelection}
           selectionMode={selectionMode}
           selectedCount={selectedIds.size}
           selectedSizeMb={selectedSizeMb}

@@ -5,6 +5,7 @@ import { MobileSheet } from "./mobile_sheet";
 
 interface ConfirmDeleteDialogProps {
   filename: string;
+  itemLabel?: string;
   onConfirm: () => Promise<void>;
   onClose: () => void;
 }
@@ -18,7 +19,12 @@ function Spinner() {
   );
 }
 
-export function ConfirmDeleteDialog({ filename, onConfirm, onClose }: ConfirmDeleteDialogProps) {
+export function ConfirmDeleteDialog({
+  filename,
+  itemLabel = "檔案",
+  onConfirm,
+  onClose,
+}: ConfirmDeleteDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,12 +41,13 @@ export function ConfirmDeleteDialog({ filename, onConfirm, onClose }: ConfirmDel
   }
 
   return (
-    <MobileSheet title="刪除檔案" onClose={onClose}>
+    <MobileSheet title={`刪除${itemLabel}`} onClose={onClose}>
       <div className="px-4 pb-2">
         <div className="bg-danger-50 dark:bg-danger-950/30 flex items-start gap-3 rounded-xl p-4">
           <MdDelete className="text-danger-600 dark:text-danger-400 mt-0.5 shrink-0 text-xl" />
           <p className="text-base text-gray-700 dark:text-gray-300">
-            確定要刪除{" "}
+            確定要刪除這個{itemLabel}
+            {" "}
             <span className="font-semibold text-gray-900 dark:text-white">{filename}</span> 嗎？
           </p>
         </div>

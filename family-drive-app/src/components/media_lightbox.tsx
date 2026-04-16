@@ -4,12 +4,12 @@ import Captions from "yet-another-react-lightbox/plugins/captions";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
-import { MdClose, MdFileDownload, MdZoomIn, MdZoomOut } from "react-icons/md";
 
 import type { DriveFile } from "../types";
 import { useAuthStore } from "../stores/auth_store";
 import { isVideoMime, getWorkerThumbnailUrl } from "../services/google_drive";
 import { useSaveImage } from "../hooks/use_save_image";
+import { LightboxInfoOverlay } from "./lightbox_info_overlay";
 import { VideoSlide } from "./video_slide";
 
 type DriveVideoSlide = {
@@ -39,20 +39,22 @@ type Props = {
   onClose: () => void;
 };
 
-function formatDate(iso?: string): string {
-  if (!iso) {
-    return "";
-  }
-  return new Date(iso).toLocaleDateString("zh-TW", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
-
-function ImageSlide({ src, alt }: { src: string; alt: string }) {
+function ImageSlide({
+  src,
+  alt,
+  showOverlay,
+  onOverlayVisibilityChange,
+}: {
+  src: string;
+  alt: string;
+  showOverlay: boolean;
+  onOverlayVisibilityChange: (visible: boolean) => void;
+}) {
   return (
-    <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-black">
+    <div
+      className="flex h-screen w-screen items-center justify-center overflow-hidden bg-black"
+      onClick={() => onOverlayVisibilityChange(!showOverlay)}
+    >
       <img
         src={src}
         alt={alt}
@@ -60,33 +62,6 @@ function ImageSlide({ src, alt }: { src: string; alt: string }) {
         className="h-full w-full object-contain select-none"
       />
     </div>
-  );
-}
-
-function IconOverlayButton({
-  onClick,
-  label,
-  disabled,
-  children,
-}: {
-  onClick: () => void;
-  label: string;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      disabled={disabled}
-      className="pointer-events-auto rounded-full bg-black/45 p-2.5 text-white backdrop-blur-sm transition hover:bg-black/65 disabled:cursor-not-allowed disabled:opacity-40"
-      aria-label={label}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -165,12 +140,6 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
     void saveImage(file);
   }
 
-  function handleSlideClick() {
-    if (window.innerWidth < 1024) {
-      setShowOverlay((prev) => !prev);
-    }
-  }
-
   return (
     <>
       {videoConfirmFile && (
@@ -219,7 +188,6 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
             setCurrentSlideIndex(index);
             queueMicrotask(syncZoomState);
           },
-          click: handleSlideClick,
           zoom: syncZoomState,
         }}
         zoom={{
@@ -232,64 +200,22 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
         toolbar={{ buttons: [] }}
         render={{
           buttonZoom: () => null,
-          controls: () => {
-            const file = files[currentSlideIndex];
-            const sizeKb = file?.size ? `${(parseInt(file.size) / 1024).toFixed(1)} KB` : "";
-            const dateStr = formatDate(file?.createdTime);
-            const counter = `${currentSlideIndex + 1} / ${files.length}`;
-            return (
-              <div
-                className={`pointer-events-none absolute inset-0 transition-opacity duration-300 lg:opacity-100 ${
-                  showOverlay ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <div className="absolute top-4 right-4 left-4 flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <IconOverlayButton onClick={handleDownload} label="儲存" disabled={saving}>
-                      {saving ? (
-                        <span className="block h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      ) : (
-                        <MdFileDownload className="h-6 w-6" />
-                      )}
-                    </IconOverlayButton>
-                    <IconOverlayButton
-                      onClick={() => zoomRef.current?.zoomIn()}
-                      label="放大"
-                      disabled={zoomState.disabled || zoomState.zoom >= zoomState.maxZoom}
-                    >
-                      <MdZoomIn className="h-6 w-6" />
-                    </IconOverlayButton>
-                    <IconOverlayButton
-                      onClick={() => zoomRef.current?.zoomOut()}
-                      label="縮小"
-                      disabled={zoomState.disabled || zoomState.zoom <= zoomState.minZoom}
-                    >
-                      <MdZoomOut className="h-6 w-6" />
-                    </IconOverlayButton>
-                  </div>
-                  <IconOverlayButton onClick={onClose} label="關閉">
-                    <MdClose className="h-6 w-6" />
-                  </IconOverlayButton>
-                </div>
-                <div className="absolute right-0 bottom-14 left-0 flex items-end justify-between gap-3 px-4">
-                  <div className="max-w-[calc(100vw-7.5rem)] min-w-0 rounded-2xl bg-black/35 px-3 py-2 text-white/85 backdrop-blur-md sm:max-w-xl">
-                    {file?.name && (
-                      <p className="line-clamp-2 text-base leading-snug font-medium text-white">
-                        {file.name}
-                      </p>
-                    )}
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/75">
-                      {sizeKb && <span className="whitespace-nowrap">{sizeKb}</span>}
-                      {dateStr && <span className="whitespace-nowrap">{dateStr}</span>}
-                    </div>
-                  </div>
-                  <div className="min-w-[5.5rem] rounded-2xl bg-black/35 px-3 py-2 text-center text-base text-white/85 backdrop-blur-md">
-                    <span className="whitespace-nowrap tabular-nums">{counter}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          },
+          controls: () => (
+            <LightboxInfoOverlay
+              currentSlideIndex={currentSlideIndex}
+              filesCount={files.length}
+              file={files[currentSlideIndex]}
+              saving={saving}
+              showOverlay={showOverlay}
+              zoomDisabled={zoomState.disabled}
+              canZoomIn={zoomState.zoom < zoomState.maxZoom}
+              canZoomOut={zoomState.zoom > zoomState.minZoom}
+              onClose={onClose}
+              onDownload={handleDownload}
+              onZoomIn={() => zoomRef.current?.zoomIn()}
+              onZoomOut={() => zoomRef.current?.zoomOut()}
+            />
+          ),
           slide: ({ slide, offset }) => {
             if (slide.type === "drive-video") {
               return (
@@ -299,11 +225,19 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
                   name={slide.driveName}
                   isActive={offset === 0}
                   showOverlay={showOverlay}
+                  onOverlayVisibilityChange={setShowOverlay}
                 />
               );
             }
             if (slide.type === "drive-image") {
-              return <ImageSlide src={slide.src} alt={slide.alt} />;
+              return (
+                <ImageSlide
+                  src={slide.src}
+                  alt={slide.alt}
+                  showOverlay={showOverlay}
+                  onOverlayVisibilityChange={setShowOverlay}
+                />
+              );
             }
             return undefined;
           },

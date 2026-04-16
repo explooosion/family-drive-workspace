@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { MdPlayArrow, MdPause, MdVolumeUp, MdVolumeOff } from "react-icons/md";
+
+import { VideoPlayerControls } from "./video_player_controls";
+import { VideoStatusOverlay } from "./video_status_overlay";
 
 type VideoInset = { bottom: number; horizontal: number };
 
@@ -8,14 +10,11 @@ type Props = {
   poster?: string;
   name: string;
   isActive: boolean;
+  showOverlay: boolean;
+  onOverlayVisibilityChange: (visible: boolean) => void;
 };
 
 const HIDE_DELAY_MS = 3000;
-
-function formatTime(s: number): string {
-  const m = Math.floor(s / 60);
-  return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-}
 
 function calcVideoInset(vid: HTMLVideoElement): VideoInset {
   const { videoWidth, videoHeight } = vid;
@@ -34,7 +33,14 @@ function calcVideoInset(vid: HTMLVideoElement): VideoInset {
   return { bottom: 0, horizontal: (cW - renderedW) / 2 };
 }
 
-export function VideoPlayer({ src, poster, name, isActive }: Props) {
+export function VideoPlayer({
+  src,
+  poster,
+  name,
+  isActive,
+  showOverlay,
+  onOverlayVisibilityChange,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isOverControlsRef = useRef(false);
@@ -45,6 +51,7 @@ export function VideoPlayer({ src, poster, name, isActive }: Props) {
   const [duration, setDuration] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [inset, setInset] = useState<VideoInset>({ bottom: 0, horizontal: 0 });
+  const [videoLoading, setVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -120,7 +127,11 @@ export function VideoPlayer({ src, poster, name, isActive }: Props) {
     if (isOverControlsRef.current) {
       return;
     }
-    if (controlsVisible) {
+
+    const nextVisible = !controlsVisible && !showOverlay;
+    onOverlayVisibilityChange(nextVisible);
+
+    if (!nextVisible) {
       cancelHide();
       setControlsVisible(false);
     } else {
@@ -146,11 +157,13 @@ export function VideoPlayer({ src, poster, name, isActive }: Props) {
       name,
     });
     setVideoError(true);
+    setVideoLoading(false);
     setPlaying(false);
   }
 
   function handleRetry() {
     setVideoError(false);
+    setVideoLoading(true);
     setCurrentTime(0);
     setDuration(0);
     setPlaying(false);
@@ -205,9 +218,17 @@ export function VideoPlayer({ src, poster, name, isActive }: Props) {
         poster={poster}
         className="h-screen w-screen object-contain"
         aria-label={name}
+        onLoadStart={() => setVideoLoading(true)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onError={handleVideoError}
+        onWaiting={() => setVideoLoading(true)}
+        onPlaying={() => {
+          setPlaying(true);
+          setVideoLoading(false);
+        }}
+        onSeeking={() => setVideoLoading(true)}
+        onSeeked={() => setVideoLoading(false)}
         onTimeUpdate={() => {
           if (!videoRef.current?.seeking) {
             setCurrentTime(videoRef.current?.currentTime ?? 0);
@@ -220,82 +241,28 @@ export function VideoPlayer({ src, poster, name, isActive }: Props) {
           }
           setDuration(vid.duration);
           setInset(calcVideoInset(vid));
+          setVideoLoading(false);
         }}
       />
 
       {/* Controls overlay — pointer-events-none so clicks pass through to video */}
-      <div
-        className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${
-          controlsVisible ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {/* Gradient scrim at video bottom */}
-        <div
-          className="absolute h-28 bg-gradient-to-t from-black/75 to-transparent"
-          style={insetStyle}
-        />
+      <VideoPlayerControls
+        currentTime={currentTime}
+        duration={duration}
+        insetStyle={insetStyle}
+        muted={muted}
+        playing={playing}
+        visible={controlsVisible && !videoLoading && !videoError}
+        onControlsMouseEnter={handleControlsMouseEnter}
+        onControlsMouseLeave={handleControlsMouseLeave}
+        onSeekChange={handleSeekChange}
+        onSeekPointerDown={handleSeekPointerDown}
+        onSeekPointerUp={handleSeekPointerUp}
+        onToggleMuted={() => setMuted((value) => !value)}
+        onTogglePlay={togglePlay}
+      />
 
-        {/* Controls bar — pointer-events-auto */}
-        <div
-          className="pointer-events-auto absolute px-4 pb-3"
-          style={insetStyle}
-          onMouseEnter={handleControlsMouseEnter}
-          onMouseLeave={handleControlsMouseLeave}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Seek bar */}
-          <input
-            type="range"
-            min={0}
-            max={duration || 1}
-            step={0.5}
-            value={currentTime}
-            onChange={handleSeekChange}
-            onPointerDown={handleSeekPointerDown}
-            onPointerUp={handleSeekPointerUp}
-            className="w-full cursor-pointer accent-white"
-            style={{ height: "4px" }}
-            aria-label="影片進度"
-          />
-
-          {/* Buttons row */}
-          <div className="mt-1.5 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={togglePlay}
-              className="text-white"
-              aria-label={playing ? "暫停" : "播放"}
-            >
-              {playing ? <MdPause className="text-2xl" /> : <MdPlayArrow className="text-2xl" />}
-            </button>
-            <span className="text-sm text-white/90 tabular-nums">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-            <div className="flex-1" />
-            <button
-              type="button"
-              onClick={() => setMuted((m) => !m)}
-              className="text-white"
-              aria-label={muted ? "取消靜音" : "靜音"}
-            >
-              {muted ? <MdVolumeOff className="text-2xl" /> : <MdVolumeUp className="text-2xl" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {videoError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80">
-          <p className="text-white/80">影片載入失敗，請重試</p>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="rounded-full bg-white/20 px-5 py-2 text-sm text-white backdrop-blur-sm"
-          >
-            重試
-          </button>
-        </div>
-      )}
+      <VideoStatusOverlay isLoading={videoLoading} hasError={videoError} onRetry={handleRetry} />
     </div>
   );
 }

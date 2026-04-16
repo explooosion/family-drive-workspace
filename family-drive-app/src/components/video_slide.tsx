@@ -10,19 +10,39 @@ type VideoSlideProps = {
   name: string;
   isActive: boolean;
   showOverlay: boolean;
+  onOverlayVisibilityChange: (visible: boolean) => void;
 };
 
-export function VideoSlide({ fileId, poster, name, isActive, showOverlay }: VideoSlideProps) {
+export function VideoSlide({
+  fileId,
+  poster,
+  name,
+  isActive,
+  showOverlay,
+  onOverlayVisibilityChange,
+}: VideoSlideProps) {
   const [playing, setPlaying] = useState(false);
   const accessToken = useAuthStore((s) => s.accessToken);
   const src = getWorkerVideoUrl(fileId, accessToken ?? undefined);
 
   if (playing) {
-    return <VideoPlayer src={src} poster={poster} name={name} isActive={isActive} />;
+    return (
+      <VideoPlayer
+        src={src}
+        poster={poster}
+        name={name}
+        isActive={isActive}
+        showOverlay={showOverlay}
+        onOverlayVisibilityChange={onOverlayVisibilityChange}
+      />
+    );
   }
 
   return (
-    <div className="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-black">
+    <div
+      className="relative flex h-screen w-screen items-center justify-center overflow-hidden bg-black"
+      onClick={() => onOverlayVisibilityChange(!showOverlay)}
+    >
       {poster && (
         <img
           src={poster}
@@ -30,14 +50,13 @@ export function VideoSlide({ fileId, poster, name, isActive, showOverlay }: Vide
           className="absolute inset-0 h-full w-full object-contain opacity-40"
         />
       )}
-      <div
-        className={`relative z-10 flex flex-col items-center gap-3 transition-opacity duration-300 lg:opacity-100 ${
-          showOverlay ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      <div className="relative z-10 flex flex-col items-center gap-3">
         <button
           type="button"
-          onClick={() => setPlaying(true)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setPlaying(true);
+          }}
           className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm"
           aria-label="播放影片"
         >
