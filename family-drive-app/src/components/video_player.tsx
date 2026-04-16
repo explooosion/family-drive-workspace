@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 
 import { VideoPlayerControls } from "./video_player_controls";
 import { VideoStatusOverlay } from "./video_status_overlay";
@@ -33,6 +33,30 @@ function calcVideoInset(vid: HTMLVideoElement): VideoInset {
   return { bottom: 0, horizontal: (cW - renderedW) / 2 };
 }
 
+function calcBufferedPercent(vid: HTMLVideoElement): number | null {
+  if (!Number.isFinite(vid.duration) || vid.duration <= 0 || vid.buffered.length === 0) {
+    return null;
+  }
+
+  let bufferedEnd = 0;
+
+  for (let index = 0; index < vid.buffered.length; index += 1) {
+    const start = vid.buffered.start(index);
+    const end = vid.buffered.end(index);
+
+    if (vid.currentTime >= start && vid.currentTime <= end) {
+      bufferedEnd = end;
+      break;
+    }
+
+    if (end <= vid.currentTime) {
+      bufferedEnd = end;
+    }
+  }
+
+  return Math.max(0, Math.min(100, Math.round((bufferedEnd / vid.duration) * 100)));
+}
+
 export function VideoPlayer({
   src,
   poster,
@@ -46,14 +70,47 @@ export function VideoPlayer({
   const isOverControlsRef = useRef(false);
 
   const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [inset, setInset] = useState<VideoInset>({ bottom: 0, horizontal: 0 });
   const [videoLoading, setVideoLoading] = useState(true);
+  const [loadingPercent, setLoadingPercent] = useState<number | null>(null);
   const [videoError, setVideoError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+
+  function syncBufferedPercent() {
+    const vid = videoRef.current;
+
+    if (!vid) {
+      setLoadingPercent(null);
+      return;
+    }
+
+    setLoadingPercent(calcBufferedPercent(vid));
+  }
+
+  // React does NOT reliably set the `muted` DOM property via JSX (known React bug).
+  // useLayoutEffect runs synchronously after DOM commit, before the browser can fire autoplay,
+  // ensuring `vid.muted = true` is set before `play()` is attempted.
+  useLayoutEffect(function initMutedPlayback() {
+    const vid = videoRef.current;
+    if (!vid) {
+      return;
+    }
+    vid.muted = true;
+    void vid.play().catch(() => undefined);
+  }, []);
+
+  // Sync muted toggle to the DOM property (for the mute/unmute button)
+  useEffect(function syncMutedDomProp() {
+    const vid = videoRef.current;
+    if (!vid) {
+      return;
+    }
+    vid.muted = muted;
+  }, [muted]);
 
   useEffect(
     function pauseWhenInactive() {
@@ -163,12 +220,14 @@ export function VideoPlayer({
     });
     setVideoError(true);
     setVideoLoading(false);
+    setLoadingPercent(null);
     setPlaying(false);
   }
 
   function handleRetry() {
     setVideoError(false);
     setVideoLoading(true);
+    setLoadingPercent(null);
     setCurrentTime(0);
     setDuration(0);
     setPlaying(false);
@@ -217,23 +276,40 @@ export function VideoPlayer({
         key={retryCount}
         ref={videoRef}
         src={src}
-        autoPlay
         playsInline
         muted={muted}
         poster={poster}
         className="h-screen w-screen object-contain"
         aria-label={name}
-        onLoadStart={() => setVideoLoading(true)}
+        onLoadStart={() => {
+          setVideoLoading(true);
+          setLoadingPercent(0);
+        }}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onError={handleVideoError}
-        onWaiting={() => setVideoLoading(true)}
+        onProgress={syncBufferedPercent}
+        onCanPlay={() => {
+          setVideoLoading(false);
+          syncBufferedPercent();
+        }}
+        onWaiting={() => {
+          setVideoLoading(true);
+          syncBufferedPercent();
+        }}
         onPlaying={() => {
           setPlaying(true);
           setVideoLoading(false);
+          syncBufferedPercent();
         }}
-        onSeeking={() => setVideoLoading(true)}
-        onSeeked={() => setVideoLoading(false)}
+        onSeeking={() => {
+          setVideoLoading(true);
+          syncBufferedPercent();
+        }}
+        onSeeked={() => {
+          setVideoLoading(false);
+          syncBufferedPercent();
+        }}
         onTimeUpdate={() => {
           if (!videoRef.current?.seeking) {
             setCurrentTime(videoRef.current?.currentTime ?? 0);
@@ -247,6 +323,7 @@ export function VideoPlayer({
           setDuration(vid.duration);
           setInset(calcVideoInset(vid));
           setVideoLoading(false);
+          syncBufferedPercent();
         }}
       />
 
@@ -267,7 +344,12 @@ export function VideoPlayer({
         onTogglePlay={togglePlay}
       />
 
-      <VideoStatusOverlay isLoading={videoLoading} hasError={videoError} onRetry={handleRetry} />
+      <VideoStatusOverlay
+        isLoading={videoLoading}
+        hasError={videoError}
+        loadingPercent={loadingPercent}
+        onRetry={handleRetry}
+      />
     </div>
   );
 }

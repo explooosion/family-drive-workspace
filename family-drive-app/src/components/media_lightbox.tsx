@@ -90,6 +90,8 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
     disabled: true,
   });
 
+  const isCurrentVideo = isVideoMime(files[currentSlideIndex]?.mimeType ?? "");
+
   const slides = useMemo<Array<DriveVideoSlide | DriveImageSlide>>(
     () =>
       files.map((file) => {
@@ -196,7 +198,7 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
           scrollToZoom: true,
           supports: ["drive-image"],
         }}
-        carousel={{ padding: 0, spacing: 0 }}
+        carousel={{ padding: 0, spacing: 0, preload: isCurrentVideo ? 0 : 2 }}
         toolbar={{ buttons: [] }}
         render={{
           buttonZoom: () => null,
