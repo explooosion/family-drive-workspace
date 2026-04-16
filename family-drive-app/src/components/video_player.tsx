@@ -70,7 +70,7 @@ export function VideoPlayer({
   const isOverControlsRef = useRef(false);
 
   const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [controlsVisible, setControlsVisible] = useState(true);
@@ -92,15 +92,16 @@ export function VideoPlayer({
   }
 
   // React does NOT reliably set the `muted` DOM property via JSX (known React bug).
-  // useLayoutEffect runs synchronously after DOM commit, before the browser can fire autoplay,
-  // ensuring `vid.muted = true` is set before `play()` is attempted.
-  useLayoutEffect(function initMutedPlayback() {
+  // useLayoutEffect runs synchronously after DOM commit before browser paint,
+  // so we use it to call play() and sync the muted DOM property.
+  useLayoutEffect(function initPlayback() {
     const vid = videoRef.current;
     if (!vid) {
       return;
     }
-    vid.muted = true;
+    vid.muted = muted;
     void vid.play().catch(() => undefined);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync muted toggle to the DOM property (for the mute/unmute button)
