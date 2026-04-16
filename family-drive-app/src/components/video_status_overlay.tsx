@@ -36,7 +36,9 @@ export function VideoStatusOverlay({ isLoading, hasError, onRetry }: Props) {
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/18">
       <Spinner />
-      <p className="text-sm text-white/80">載入中…</p>
+      <p className="rounded-full bg-black/40 px-4 py-1.5 text-lg font-bold text-white/90 backdrop-blur-sm">
+        載入中…
+      </p>
     </div>
   );
 }

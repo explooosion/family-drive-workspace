@@ -34,7 +34,9 @@ function PageLoader() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 dark:bg-gray-900">
       <div className="border-primary-200 border-t-primary-500 h-12 w-12 animate-spin rounded-full border-4" />
-      <p className="text-base text-gray-500 dark:text-gray-400">載入中...</p>
+      <p className="rounded-full bg-black/35 px-4 py-1.5 text-lg font-bold text-white/90 backdrop-blur-sm">
+        載入中...
+      </p>
     </div>
   );
 }
@@ -93,7 +95,7 @@ export function App() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 overflow-hidden bg-gray-50 dark:bg-gray-900">
         <div className="border-primary-200 border-t-primary-500 h-12 w-12 animate-spin rounded-full border-4" />
-        <p className="text-base text-gray-500 dark:text-gray-400">
+        <p className="rounded-full bg-black/40 px-4 py-1.5 text-lg font-bold text-white/90 backdrop-blur-sm">
           {!firebaseReady ? "努力取得照片中..." : "驗證登入資訊..."}
         </p>
       </div>

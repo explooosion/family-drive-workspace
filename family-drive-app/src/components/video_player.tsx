@@ -105,6 +105,10 @@ export function VideoPlayer({
   }
 
   function revealControls() {
+    if (videoLoading || videoError) {
+      return;
+    }
+
     setControlsVisible(true);
     if (playing) {
       scheduleHide();
@@ -128,14 +132,15 @@ export function VideoPlayer({
       return;
     }
 
-    const nextVisible = !controlsVisible && !showOverlay;
+    const renderedControlsVisible = controlsVisible && !videoLoading && !videoError;
+    const nextVisible = !(renderedControlsVisible || showOverlay);
     onOverlayVisibilityChange(nextVisible);
 
     if (!nextVisible) {
       cancelHide();
       setControlsVisible(false);
     } else {
-      setControlsVisible(true);
+      setControlsVisible(!videoLoading && !videoError);
       if (playing) {
         scheduleHide();
       }
@@ -204,7 +209,7 @@ export function VideoPlayer({
   return (
     <div
       className="relative h-screen w-screen bg-black"
-      style={{ cursor: controlsVisible ? "default" : "none" }}
+      style={{ cursor: controlsVisible && !videoLoading && !videoError ? "default" : "none" }}
       onMouseMove={revealControls}
       onClick={handleVideoAreaClick}
     >

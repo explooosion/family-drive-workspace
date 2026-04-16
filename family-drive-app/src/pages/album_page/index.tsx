@@ -191,7 +191,9 @@ export function AlbumPage() {
             </button>
           </div>
         ) : (
-          <p className="text-base">正在取得存取權限...</p>
+          <p className="rounded-full bg-black/35 px-4 py-1.5 text-base text-white/90 backdrop-blur-sm">
+            正在取得存取權限...
+          </p>
         )}
       </div>
     );
