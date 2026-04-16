@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Lightbox from "yet-another-react-lightbox";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
@@ -144,8 +145,9 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
 
   return (
     <>
-      {videoConfirmFile && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      {videoConfirmFile &&
+        createPortal(
+          <div className="fixed inset-0 z-99999 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
             <p className="mb-1 text-base font-semibold text-gray-900 dark:text-white">下載影片？</p>
             <p className="mb-5 text-base text-gray-500 dark:text-gray-400">
@@ -176,8 +178,9 @@ export function MediaLightbox({ files, initialIndex, onClose }: Props) {
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
       <Lightbox
         open={true}
         close={onClose}
