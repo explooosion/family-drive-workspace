@@ -4,11 +4,11 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: '/family-drive-workspace/',
+export default defineConfig(({ command }) => ({
+  base: command === 'serve' ? '/' : '/family-drive-workspace/',
   plugins: [
     tailwindcss(),
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
-})
+}))
