@@ -11,15 +11,22 @@ type DriveFileMetadata = {
 const DEFAULT_VIDEO_THUMBNAIL_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Default video thumbnail">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#1f2937"/>
+      <stop offset="50%" stop-color="#172554"/>
+      <stop offset="100%" stop-color="#111827"/>
     </linearGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
   </defs>
-  <rect width="640" height="360" fill="url(#g)"/>
-  <circle cx="320" cy="180" r="54" fill="#ffffff" fill-opacity="0.16"/>
-  <polygon points="305,150 305,210 355,180" fill="#ffffff"/>
-  <text x="320" y="300" text-anchor="middle" font-size="18" font-family="Arial, sans-serif" fill="#d1d5db">Preview unavailable</text>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <g filter="url(#blur)" opacity="0.9">
+    <ellipse cx="164" cy="126" rx="120" ry="92" fill="#38bdf8" fill-opacity="0.24"/>
+    <ellipse cx="470" cy="118" rx="132" ry="104" fill="#818cf8" fill-opacity="0.18"/>
+    <ellipse cx="336" cy="264" rx="190" ry="118" fill="#22c55e" fill-opacity="0.14"/>
+    <ellipse cx="558" cy="286" rx="116" ry="86" fill="#f59e0b" fill-opacity="0.12"/>
+  </g>
 </svg>
 `.trim();
 
