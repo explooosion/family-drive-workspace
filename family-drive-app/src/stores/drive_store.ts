@@ -255,7 +255,7 @@ export const useDriveStore = create<DriveState>((setState, getState) => ({
     const newStale = new Set(getState().staleFolderIds);
     newStale.delete(currentFolderId);
     saveCacheToStorage(newCache);
-    setState({ folderCache: newCache, staleFolderIds: newStale, loading: true });
+    setState({ folderCache: newCache, staleFolderIds: newStale, files: [], loading: true });
     await getState().refreshFiles(accessToken);
   },
 
